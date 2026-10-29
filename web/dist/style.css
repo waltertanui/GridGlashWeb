@@ -4,3 +4,5 @@
 .diamond-card{border:1px solid #8eaf69;background:#b9ef810a;border-radius:10px;padding:18px;color:var(--green)}.diamond-card strong{display:block;font:500 19px "Space Grotesk",sans-serif}.diamond-card span{display:block;margin-top:8px;color:var(--muted);font-size:11px}.edge[aria-disabled="true"] .hit{cursor:wait}
 
 .computer-activity{font-size:11px;line-height:1.6;color:var(--peach);padding:11px 13px;background:#f5b39809;border:1px solid #f5b39829;border-radius:8px;margin:4px 0 15px}.computer-activity[hidden]{display:none}.latest-move{stroke:var(--panel);stroke-width:2}.computer-line{filter:drop-shadow(0 0 3px #f5b39844)}
+
+.brand .brand-logo{display:block;width:44px;height:44px;flex:none}@media(max-width:600px){.brand .brand-logo{width:36px;height:36px}}

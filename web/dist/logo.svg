@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <title>GridClash diamond dots and boxes logo</title>
+  <rect width="64" height="64" rx="15" fill="#18231e"/>
+  <path d="M24 8h16v16h16v16H40v16H24V40H8V24h16V8Z" stroke="#b9ef81" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M24 24h16v16H24V24Z" fill="#f5b398" fill-opacity=".2" stroke="#f5b398" stroke-width="3"/>
+  <g fill="#b9ef81"><circle cx="24" cy="8" r="3"/><circle cx="40" cy="8" r="3"/><circle cx="8" cy="24" r="3"/><circle cx="56" cy="24" r="3"/><circle cx="8" cy="40" r="3"/><circle cx="56" cy="40" r="3"/><circle cx="24" cy="56" r="3"/><circle cx="40" cy="56" r="3"/></g>
+  <g fill="#f5b398"><circle cx="24" cy="24" r="3"/><circle cx="40" cy="24" r="3"/><circle cx="24" cy="40" r="3"/><circle cx="40" cy="40" r="3"/></g>
+</svg>
