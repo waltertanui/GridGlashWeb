@@ -1,0 +1,8 @@
+.local-repository-backups/
+original/
+**/.env
+**/.env.*
+!**/.env.example
+**/.data/
+**/.vercel/
+**/node_modules/
