@@ -1,5 +1,22 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101916"><meta name="description" content="Connect the dots. Claim the boxes. Play Dots & Boxes against a friend or the computer."><title>GridClash — Dots & Boxes</title><link rel="stylesheet" href="style.css"><link rel="icon" type="image/svg+xml" href="/logo.svg"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101916"><meta name="description" content="Connect the dots. Claim the boxes. Play Dots & Boxes against a friend or the computer."><title>GridClash — Dots & Boxes</title><link rel="stylesheet" href="style.css"><link rel="icon" type="image/svg+xml" href="/logo.svg">
+<link rel="canonical" href="https://gridclashweb.vercel.app/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GridClash">
+<meta property="og:title" content="GridClash — Small lines. Big rivalries.">
+<meta property="og:description" content="Connect the dots. Claim the boxes. Challenge the computer or a friend on a diamond board. Play in your browser.">
+<meta property="og:url" content="https://gridclashweb.vercel.app/">
+<meta property="og:image" content="https://gridclashweb.vercel.app/social-card.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="GridClash: Small lines. Big rivalries. A green and peach diamond dots-and-boxes board.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="GridClash — Small lines. Big rivalries.">
+<meta name="twitter:description" content="Connect the dots. Claim the boxes. Can you outsmart the computer? Play GridClash in your browser.">
+<meta name="twitter:image" content="https://gridclashweb.vercel.app/social-card.png">
+<meta name="twitter:image:alt" content="GridClash: Small lines. Big rivalries. A green and peach diamond dots-and-boxes board.">
+</head>
 <body><header><a class="brand" href="./"><img class="brand-logo" src="/logo.svg" width="44" height="44" alt=""> GridClash<span class="beta">DOTS & BOXES</span></a><button id="help" class="quiet">How to play ↗</button></header>
 <main><section class="intro"><div class="eyebrow"><span></span> SMALL LINES. BIG PLANS.</div><h1>Connect. Capture.<br><em>Outsmart.</em></h1><p>A classic battle of boxes, one line at a time.<br>Find your edge. Make it yours.</p></section>
 <div class="arena"><aside class="settings"><div class="section-heading"><span>01</span><h2>Your next match</h2></div><label for="mode">PLAY MODE</label><div class="select-wrap"><select id="mode"><option value="ai">You vs Computer</option><option value="local">Two players · same device</option></select></div><label>THE PLAYING FIELD</label><div class="diamond-card"><strong>◇ Diamond</strong><span>25 boxes · one clever battle</span></div><label for="difficulty">DIFFICULTY</label><select id="difficulty"><option value="easy">Easy · warm up</option><option value="medium" selected>Medium · a worthy rival</option><option value="hard">Hard · think ahead</option></select><label for="first">FIRST MOVE</label><select id="first"><option value="0">You start</option><option value="1">Computer starts</option></select><label for="p1">PLAYER NAMES</label><div class="names"><span class="dot green"></span><input id="p1" maxlength="16" value="You" aria-label="Player one name"></div><div class="names"><span class="dot peach"></span><input id="p2" maxlength="16" value="Computer" aria-label="Player two name" disabled></div><button class="primary" id="new">Start fresh <span>↗</span></button><p class="setting-note">Changing play mode starts a fresh match.</p><div class="rule-note"><span>✧</span><p>Complete a box, then pass the turn.<br>Sometimes the best move is patience.</p></div></aside>
