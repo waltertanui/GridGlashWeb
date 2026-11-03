@@ -1,6 +1,6 @@
 import {analytics} from './analytics.js';
-import {getAllAvailableLines,getScores,isGameOver,getWinner} from './gameLogic.js?v=enclosures-7';
-import {Match} from './match.js?v=enclosures-7';
+import {getAllAvailableLines,getScores,isGameOver,getWinner} from './gameLogic.js?v=border-enclosures-8';
+import {Match} from './match.js?v=border-enclosures-8';
 const $=id=>document.getElementById(id), NS='http://www.w3.org/2000/svg';
 let board,turn=0,config,gameAnalytics;
 const match=new Match({onChange:state=>{board=state.board;turn=state.turn;config=state.config;render();gameAnalytics?.observe({hasMoves:state.moves.length>0,finished:isGameOver(state.board),mode:state.config.mode});}});

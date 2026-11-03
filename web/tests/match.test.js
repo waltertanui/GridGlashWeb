@@ -55,7 +55,7 @@ test('Local capture passes to the other player without scheduling AI',()=>{
 });
 test('Capturing two boxes still passes the turn',()=>{
   const {match,pending}=setup();let b=createBoardWithBorder(2,2);
-  b=drawLine(b,{type:'h',row:1,col:0},0).newBoard;b=drawLine(b,{type:'h',row:1,col:1},1).newBoard;
+  b.hLines[1][0]=true;b.hLineOwner[1][0]=0;b.hLines[1][1]=true;b.hLineOwner[1][1]=1;
   match.board=b;match.play({type:'v',row:0,col:1});assert.equal(match.moves[0].captured,2);
   assert.deepEqual(getScores(match.board),[2,0]);assert.equal(match.turn,1);assert.equal(pending.size,1);
 });

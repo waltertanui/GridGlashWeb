@@ -60,3 +60,45 @@ test('Enclosure switches turns; undo restores the entire captured area',()=>{
   assert.ok(match.play(missing));assert.equal(match.turn,1);assert.equal(match.moves.at(-1).captured,4);
   match.undo();assert.equal(match.turn,0);assert.equal(match.board,board);assert.deepEqual(getScores(match.board),[0,0]);
 });
+
+// The reported green closing line seals the three upper shoulder boxes and
+// the box just below their left end. Much of the perimeter is pre-drawn.
+function screenshotPocket(){
+  const board=createDiamondBoard(),pocket=[[1,2],[1,3],[1,4],[2,2]],missing={type:'h',row:2,col:4};
+  const owned=[[[0,3],[3,6]],[[2,1],[2,3],[3,0],[3,1],[3,2],[3,3],[4,1],[4,3],[6,3]]];
+  function wall(type,row,col,owner){board[type==='h'?'hLines':'vLines'][row][col]=true;if(board[type==='h'?'hLineOwner':'vLineOwner'][row][col]===null)board[type==='h'?'hLineOwner':'vLineOwner'][row][col]=owner;}
+  for(let owner=0;owner<2;owner++)for(const [r,c] of owned[owner]){
+    board.boxes[r][c]=owner;wall('h',r,c,owner);wall('h',r+1,c,owner);wall('v',r,c,owner);wall('v',r,c+1,owner);
+  }
+  const inside=new Set(pocket.map(p=>p.join(',')));
+  for(const [r,c] of pocket)for(const [nr,nc,type,row,col] of [[r-1,c,'h',r,c],[r+1,c,'h',r+1,c],[r,c-1,'v',r,c],[r,c+1,'v',r,c+1]]){
+    if(inside.has(nr+','+nc)||type===missing.type&&row===missing.row&&col===missing.col)continue;
+    const lines=board[type==='h'?'hLines':'vLines'];if(!lines[row][col])wall(type,row,col,1);
+  }
+  return {board,pocket,missing};
+}
+test('Reported green line captures the four border-connected boxes immediately',()=>{
+  const {board,pocket,missing}=screenshotPocket();assert.deepEqual(getScores(board),[2,9]);
+  const result=drawLine(board,missing,0);assert.equal(result.claimedBoxes,4);assert.deepEqual(getScores(result.newBoard),[6,9]);
+  for(const [r,c] of pocket)assert.equal(result.newBoard.boxes[r][c],0);
+  assert.equal(result.newBoard.hLines[2][2],false);assert.deepEqual(getScores(board),[2,9]);
+  const computer=drawLine(result.newBoard,{type:'h',row:2,col:2},1);
+  assert.equal(computer.claimedBoxes,0);assert.deepEqual(getScores(computer.newBoard),[6,9]);
+});
+test('An open border-connected pocket awards nothing before the closing green line',()=>{
+  const {board,pocket}=screenshotPocket();
+  // Leave a second route open through the lower area.
+  board.hLines[3][2]=false;board.hLineOwner[3][2]=null;
+  board.hLines[4][2]=false;board.hLineOwner[4][2]=null;
+  const result=drawLine(board,{type:'h',row:2,col:4},0);
+  assert.equal(result.claimedBoxes,0);for(const [r,c] of pocket)assert.equal(result.newBoard.boxes[r][c],null);
+});
+test('Border enclosure preserves boxes already owned by the other player',()=>{
+  const {board,missing}=screenshotPocket();board.boxes[2][2]=1;
+  const result=drawLine(board,missing,0);assert.equal(result.claimedBoxes,3);assert.equal(result.newBoard.boxes[2][2],1);
+  assert.deepEqual(getScores(result.newBoard),[5,10]);
+});
+test('The first corner capture gives one point, not the entire pre-bordered board',()=>{
+  const result=drawLine(createDiamondBoard(),{type:'h',row:1,col:3},0);
+  assert.equal(result.claimedBoxes,1);assert.deepEqual(getScores(result.newBoard),[1,0]);
+});

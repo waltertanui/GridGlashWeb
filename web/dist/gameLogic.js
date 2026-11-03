@@ -135,41 +135,45 @@ export function drawLine(
     }
   }
 
-  // Neutral starting borders do not enclose the entire board on move one.
-  // Only newly closed loops of played lines award their unclaimed interior.
-  const before = enclosedCells(board);
-  for (const [r, c] of enclosedCells(newBoard)) {
-    if (!before.some(([br, bc]) => br === r && bc === c) && newBoard.boxes[r][c] === null) {
-      newBoard.boxes[r][c] = playerIdx;
-      claimedBoxes++;
+  // The new wall can split the connected playing field into a sealed pocket
+  // and its larger remainder. All drawn walls count, including the neutral
+  // starting border. Equal pockets are both captured (as with two unit boxes).
+  const [first, second] = getAdjacentBoxes(board, pos);
+  if (first && second) {
+    const a = connectedRegion(newBoard, ...first);
+    if (!a.some(([r, c]) => r === second[0] && c === second[1])) {
+      const b = connectedRegion(newBoard, ...second);
+      const captured = a.length < b.length ? a : b.length < a.length ? b : [...a, ...b];
+      for (const [r, c] of captured) {
+        if (newBoard.boxes[r][c] === null) {
+          newBoard.boxes[r][c] = playerIdx;
+          claimedBoxes++;
+        }
+      }
     }
   }
   return { newBoard, claimedBoxes };
 }
 
-// Flood from outside across every unplayed edge, including neutral border edges.
-// Owned cells remain traversable: captures never transfer previous ownership.
-function enclosedCells(board) {
-  const reached = new Set(['-1,-1']), queue = [[-1, -1]];
+// Flood through missing dividing lines. Existing ownership is not a wall;
+// only real drawn lines and the edge of the board separate regions.
+function connectedRegion(board, row, col) {
+  const reached = new Set([row + ',' + col]), queue = [[row, col]];
   for (let i = 0; i < queue.length; i++) {
     const [r, c] = queue[i];
     const neighbors = [
-      [r - 1, c, board.hLineOwner[r]?.[c]],
-      [r + 1, c, board.hLineOwner[r + 1]?.[c]],
-      [r, c - 1, board.vLineOwner[r]?.[c]],
-      [r, c + 1, board.vLineOwner[r]?.[c + 1]],
+      [r - 1, c, board.hLines[r][c]],
+      [r + 1, c, board.hLines[r + 1][c]],
+      [r, c - 1, board.vLines[r][c]],
+      [r, c + 1, board.vLines[r][c + 1]],
     ];
-    for (const [nr, nc, owner] of neighbors) {
-      if (nr < -1 || nc < -1 || nr > board.rows || nc > board.cols || owner != null) continue;
+    for (const [nr, nc, wall] of neighbors) {
+      if (wall || !isCellActive(board, nr, nc)) continue;
       const key = nr + ',' + nc;
       if (!reached.has(key)) { reached.add(key); queue.push([nr, nc]); }
     }
   }
-  const enclosed = [];
-  for (let r = 0; r < board.rows; r++) for (let c = 0; c < board.cols; c++) {
-    if (isCellActive(board, r, c) && !reached.has(r + ',' + c)) enclosed.push([r, c]);
-  }
-  return enclosed;
+  return queue;
 }
 
 export function getAdjacentBoxes(board           , pos         )                     {
