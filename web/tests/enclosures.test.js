@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createDiamondBoard,drawLine,getScores,getAIMove,isGameOver,getAllAvailableLines} from '../dist/gameLogic.js';
+import {createDiamondBoard,drawLine,getScores,getAIMove,isGameOver,getAllAvailableLines,createBoardWithBorder} from '../dist/gameLogic.js';
 import {Match} from '../dist/match.js';
 
 function rectangle(r,c,height,width){
@@ -32,20 +32,20 @@ test('An open loop and the neutral starting border do not award the whole board'
   const fresh=drawLine(createDiamondBoard(),{type:'h',row:3,col:3},0);
   assert.equal(fresh.claimedBoxes,0);
 });
-test('A larger loop awards six boxes and preserves an opponent-owned box',()=>{
+test('The higher-scoring side wins while an opponent-owned box stays unchanged',()=>{
   const {board,missing}=prepare(rectangle(2,2,3,2));board.boxes[3][3]=1;
   const result=drawLine(board,missing,0);
-  assert.equal(result.claimedBoxes,5);assert.deepEqual(getScores(result.newBoard),[5,1]);
+  assert.equal(result.claimedBoxes,15);assert.deepEqual(getScores(result.newBoard),[15,1]);
   assert.equal(result.newBoard.boxes[3][3],1);
 });
 test('The fourth side of a single box is counted once, including inside a loop',()=>{
   const {board,missing}=prepare(rectangle(2,2,1,1));const result=drawLine(board,missing,1);
   assert.equal(result.claimedBoxes,1);assert.deepEqual(getScores(result.newBoard),[0,1]);
 });
-test('Computer recognises the four-box enclosure rather than a single corner',()=>{
+test('Computer chooses the three-point area instead of a single corner',()=>{
   for(const level of ['medium','hard']){
-    const {board}=prepare(rectangle(2,2,2,2));const move=getAIMove(board,level);
-    assert.equal(drawLine(board,move,1).claimedBoxes,4);
+    const board=createBoardWithBorder(1,5);const move=getAIMove(board,level);
+    assert.equal(drawLine(board,move,1).claimedBoxes,3);
   }
 });
 test('Enclosure ends the game when all boxes are owned, despite undrawn interior lines',()=>{
@@ -77,13 +77,13 @@ function screenshotPocket(){
   }
   return {board,pocket,missing};
 }
-test('Reported green line captures the four border-connected boxes immediately',()=>{
+test('Highest-side policy chooses ten points over the opposite four-point pocket',()=>{
   const {board,pocket,missing}=screenshotPocket();assert.deepEqual(getScores(board),[2,9]);
-  const result=drawLine(board,missing,0);assert.equal(result.claimedBoxes,4);assert.deepEqual(getScores(result.newBoard),[6,9]);
-  for(const [r,c] of pocket)assert.equal(result.newBoard.boxes[r][c],0);
+  const result=drawLine(board,missing,0);assert.equal(result.claimedBoxes,10);assert.deepEqual(getScores(result.newBoard),[12,9]);
+  for(const [r,c] of pocket)assert.equal(result.newBoard.boxes[r][c],null);
   assert.equal(result.newBoard.hLines[2][2],false);assert.deepEqual(getScores(board),[2,9]);
   const computer=drawLine(result.newBoard,{type:'h',row:2,col:2},1);
-  assert.equal(computer.claimedBoxes,0);assert.deepEqual(getScores(computer.newBoard),[6,9]);
+  assert.equal(computer.claimedBoxes,1);assert.deepEqual(getScores(computer.newBoard),[12,10]);
 });
 test('An open border-connected pocket awards nothing before the closing green line',()=>{
   const {board,pocket}=screenshotPocket();
@@ -95,8 +95,8 @@ test('An open border-connected pocket awards nothing before the closing green li
 });
 test('Border enclosure preserves boxes already owned by the other player',()=>{
   const {board,missing}=screenshotPocket();board.boxes[2][2]=1;
-  const result=drawLine(board,missing,0);assert.equal(result.claimedBoxes,3);assert.equal(result.newBoard.boxes[2][2],1);
-  assert.deepEqual(getScores(result.newBoard),[5,10]);
+  const result=drawLine(board,missing,0);assert.equal(result.claimedBoxes,10);assert.equal(result.newBoard.boxes[2][2],1);
+  assert.deepEqual(getScores(result.newBoard),[12,10]);
 });
 test('The first corner capture gives one point, not the entire pre-bordered board',()=>{
   const result=drawLine(createDiamondBoard(),{type:'h',row:1,col:3},0);

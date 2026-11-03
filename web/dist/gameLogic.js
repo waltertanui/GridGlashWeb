@@ -135,22 +135,22 @@ export function drawLine(
     }
   }
 
-  // The new wall can split the connected playing field into a sealed pocket
-  // and its larger remainder. All drawn walls count, including the neutral
-  // starting border. Tied multi-box pockets award one side only; the side
-  // above a horizontal line or left of a vertical line wins the tie. Two
-  // completed individual boxes are the only equal-size double capture.
+  // A completed unit box is scored normally; it must not turn a corner
+  // capture into a claim on the entire remaining field. When neither side
+  // is a completed unit box, choose the closed region with the most new
+  // points. Claimed cells never contribute to that comparison or transfer.
   const [first, second] = getAdjacentBoxes(board, pos);
-  if (first && second) {
+  if (claimedBoxes === 0 && first && second) {
     const a = connectedRegion(newBoard, ...first);
     if (!a.some(([r, c]) => r === second[0] && c === second[1])) {
       const b = connectedRegion(newBoard, ...second);
-      const captured = a.length === 1 && b.length === 1 ? [...a, ...b] : a.length <= b.length ? a : b;
+      const unclaimed = region => region.filter(([r, c]) => board.boxes[r][c] === null);
+      const aPoints = surroundsOtherCells(newBoard, a) ? [] : unclaimed(a);
+      const bPoints = surroundsOtherCells(newBoard, b) ? [] : unclaimed(b);
+      const captured = aPoints.length >= bPoints.length ? aPoints : bPoints;
       for (const [r, c] of captured) {
-        if (newBoard.boxes[r][c] === null) {
-          newBoard.boxes[r][c] = playerIdx;
-          claimedBoxes++;
-        }
+        newBoard.boxes[r][c] = playerIdx;
+        claimedBoxes++;
       }
     }
   }
@@ -176,6 +176,25 @@ function connectedRegion(board, row, col) {
     }
   }
   return queue;
+}
+
+// The outside remainder around an internal loop is not its captured interior.
+// Reject ring-shaped regions that surround cells outside the candidate itself.
+function surroundsOtherCells(board, region) {
+  const blocked = new Set(region.map(([r,c]) => r + ',' + c));
+  const visited = new Set(['-1,-1']), queue = [[-1,-1]];
+  for (let i=0;i<queue.length;i++) {
+    const [r,c]=queue[i];
+    for (const [nr,nc] of [[r-1,c],[r+1,c],[r,c-1],[r,c+1]]) {
+      const key=nr+','+nc;
+      if(nr < -1 || nc < -1 || nr > board.rows || nc > board.cols || blocked.has(key) || visited.has(key)) continue;
+      visited.add(key);queue.push([nr,nc]);
+    }
+  }
+  for(let r=0;r<board.rows;r++)for(let c=0;c<board.cols;c++) {
+    if(isCellActive(board,r,c)&&board.boxes[r][c]===null&&!blocked.has(r+','+c)&&!visited.has(r+','+c))return true;
+  }
+  return false;
 }
 
 export function getAdjacentBoxes(board           , pos         )                     {
