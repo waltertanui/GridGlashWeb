@@ -96,10 +96,12 @@ export function isLineAvailable(board           , pos         )          {
   if (pos.type === 'h') {
     const { above, below } = getHLineNeighborActivity(board, pos.row, pos.col);
     if (!above || !below) return false;
+    if (board.boxes[pos.row - 1][pos.col] !== null && board.boxes[pos.row][pos.col] !== null) return false;
     return !board.hLines[pos.row][pos.col];
   }
   const { left, right } = getVLineNeighborActivity(board, pos.row, pos.col);
   if (!left || !right) return false;
+  if (board.boxes[pos.row][pos.col - 1] !== null && board.boxes[pos.row][pos.col] !== null) return false;
   return !board.vLines[pos.row][pos.col];
 }
 
