@@ -11,3 +11,7 @@ Computer turns are owned by dist/match.js and run automatically after every huma
 ## Anonymous analytics and Vercel
 
 See [VERCEL.md](VERCEL.md) for deployment and the three required server environment variables. Open `/admin` for private counts of visitors, visits, starts and completions. Local data stays in ignored `.data/`; production requires Upstash Redis. Player names are excluded. `/privacy` provides a browser opt-out. The full project, including `api` and `lib`, is required on Vercel; a static-only `dist` upload cannot collect statistics.
+
+## Enclosure capture rule
+
+Completing an individual box still awards one point. Closing a loop of played lines awards every unclaimed active box inside, even if its internal dividing lines are missing. Played lines from either player can form the loop; the player placing the closing line earns the unclaimed interior. Previously claimed boxes retain their owners. The neutral pre-drawn outer border helps individual boxes but does not count as a played loop, so the starting board cannot be captured immediately. Turns always alternate. Undo restores an entire enclosure capture. Medium and hard computer play evaluate enclosure gains and opponent replies.

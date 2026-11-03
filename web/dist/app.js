@@ -1,6 +1,6 @@
 import {analytics} from './analytics.js';
-import {getAllAvailableLines,getScores,isGameOver,getWinner} from './gameLogic.js';
-import {Match} from './match.js?v=alternating-turns-5';
+import {getAllAvailableLines,getScores,isGameOver,getWinner} from './gameLogic.js?v=enclosures-7';
+import {Match} from './match.js?v=enclosures-7';
 const $=id=>document.getElementById(id), NS='http://www.w3.org/2000/svg';
 let board,turn=0,config,gameAnalytics;
 const match=new Match({onChange:state=>{board=state.board;turn=state.turn;config=state.config;render();gameAnalytics?.observe({hasMoves:state.moves.length>0,finished:isGameOver(state.board),mode:state.config.mode});}});
@@ -21,7 +21,7 @@ $('computer-activity').textContent=lastComputer?`Computer played ${computerMoves
 for(const line of root.querySelectorAll('.played')){if(line.getAttribute('stroke')===colors[1])line.classList.add('computer-line');}
 if(last){const x=50+last.col*step,y=50+last.row*step;svg('circle',{cx:x+(last.type==='h'?step/2:0),cy:y+(last.type==='v'?step/2:0),r:5,fill:colors[last.player],class:'latest-move','pointer-events':'none'});}
 if(done){const winner=getWinner(board);$('status').textContent=winner==='tie'?`A perfect tie! ${scores[0]} – ${scores[1]}. Start fresh for a rematch.`:`${config.names[winner]} wins ${scores[winner]} – ${scores[1-winner]}! Ready for a rematch?`;}
-else $('status').textContent=match.isComputerTurn()?'Computer is choosing a line…':last?.captured?`${config.names[last.player]} captured ${last.captured===2?'two boxes':'a box'} — ${config.names[turn]==='You'?'your':config.names[turn]+"'s"} turn.`:`${config.names[turn]==='You'?'Your':config.names[turn]+"'s"} move. Pick a line between two dots.`;
+else $('status').textContent=match.isComputerTurn()?'Computer is choosing a line…':last?.captured?`${config.names[last.player]} captured ${last.captured===1?'a box':last.captured+' boxes'} — ${config.names[turn]==='You'?'your':config.names[turn]+"'s"} turn.`:`${config.names[turn]==='You'?'Your':config.names[turn]+"'s"} move. Pick a line between two dots.`;
 }
 
 $('mode').addEventListener('change',()=>{const ai=$('mode').value==='ai';$('difficulty').disabled=!ai;$('p2').disabled=ai;$('p2').value=ai?'Computer':'Player 2';$('first').options[1].textContent=ai?'Computer starts':'Player 2 starts';start();});$('new').onclick=start;$('difficulty').addEventListener('change',()=>{config.difficulty=$('difficulty').value;});

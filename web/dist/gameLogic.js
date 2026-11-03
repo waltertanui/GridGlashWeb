@@ -1,19 +1,3 @@
-                                 
-                                                                     
-                                              
-
-                            
-               
-               
-                    
-                          
-                      
-                      
-                                  
-                                  
-                             
- 
-
 export function createBoard(rows        , cols        )            {
   return {
     rows,
@@ -108,6 +92,7 @@ export function isBorderLine(board           , pos         )          {
 }
 
 export function isLineAvailable(board           , pos         )          {
+  if (isGameOver(board)) return false;
   if (pos.type === 'h') {
     const { above, below } = getHLineNeighborActivity(board, pos.row, pos.col);
     if (!above || !below) return false;
@@ -150,7 +135,41 @@ export function drawLine(
     }
   }
 
+  // Neutral starting borders do not enclose the entire board on move one.
+  // Only newly closed loops of played lines award their unclaimed interior.
+  const before = enclosedCells(board);
+  for (const [r, c] of enclosedCells(newBoard)) {
+    if (!before.some(([br, bc]) => br === r && bc === c) && newBoard.boxes[r][c] === null) {
+      newBoard.boxes[r][c] = playerIdx;
+      claimedBoxes++;
+    }
+  }
   return { newBoard, claimedBoxes };
+}
+
+// Flood from outside across every unplayed edge, including neutral border edges.
+// Owned cells remain traversable: captures never transfer previous ownership.
+function enclosedCells(board) {
+  const reached = new Set(['-1,-1']), queue = [[-1, -1]];
+  for (let i = 0; i < queue.length; i++) {
+    const [r, c] = queue[i];
+    const neighbors = [
+      [r - 1, c, board.hLineOwner[r]?.[c]],
+      [r + 1, c, board.hLineOwner[r + 1]?.[c]],
+      [r, c - 1, board.vLineOwner[r]?.[c]],
+      [r, c + 1, board.vLineOwner[r]?.[c + 1]],
+    ];
+    for (const [nr, nc, owner] of neighbors) {
+      if (nr < -1 || nc < -1 || nr > board.rows || nc > board.cols || owner != null) continue;
+      const key = nr + ',' + nc;
+      if (!reached.has(key)) { reached.add(key); queue.push([nr, nc]); }
+    }
+  }
+  const enclosed = [];
+  for (let r = 0; r < board.rows; r++) for (let c = 0; c < board.cols; c++) {
+    if (isCellActive(board, r, c) && !reached.has(r + ',' + c)) enclosed.push([r, c]);
+  }
+  return enclosed;
 }
 
 export function getAdjacentBoxes(board           , pos         )                     {
@@ -230,56 +249,24 @@ export function getWinner(board           )                       {
   return 'tie';
 }
 
-                                                    
 
-export function getAIMove(board           , difficulty            )                 {
+
+export function getAIMove(board, difficulty) {
   const available = getAllAvailableLines(board);
-  if (available.length === 0) return null;
-
-  if (difficulty === 'easy') {
-    return available[Math.floor(Math.random() * available.length)];
-  }
-
-  const captureMoves            = [];
-  for (const pos of available) {
-    const adj = getAdjacentBoxes(board, pos);
-    if (adj.some(([r, c]) => board.boxes[r][c] === null && getBoxSideCount(board, r, c) === 3)) {
-      captureMoves.push(pos);
+  if (!available.length) return null;
+  if (difficulty === 'easy') return available[Math.floor(Math.random() * available.length)];
+  const options = available.map(move => ({move, ...drawLine(board, move, 1)}));
+  const most = Math.max(...options.map(o => o.claimedBoxes));
+  if (difficulty === 'medium' && most > 0) return options.find(o => o.claimedBoxes === most).move;
+  let best = [], bestValue = -Infinity;
+  for (const option of options) {
+    let reply = 0;
+    for (const move of getAllAvailableLines(option.newBoard)) {
+      reply = Math.max(reply, drawLine(option.newBoard, move, 0).claimedBoxes);
     }
+    const value = option.claimedBoxes - reply;
+    if (value > bestValue) { bestValue = value; best = [option.move]; }
+    else if (value === bestValue) best.push(option.move);
   }
-  if (captureMoves.length > 0) return captureMoves[0];
-
-  const safeMoves = available.filter(pos => {
-    const { newBoard } = drawLine(board, pos, 1);
-    for (let r = 0; r < board.rows; r++) {
-      for (let c = 0; c < board.cols; c++) {
-        if (!isCellActive(board, r, c)) continue;
-        if (newBoard.boxes[r][c] === null && getBoxSideCount(newBoard, r, c) === 3) return false;
-      }
-    }
-    return true;
-  });
-
-  if (safeMoves.length > 0) {
-    return safeMoves[Math.floor(Math.random() * safeMoves.length)];
-  }
-
-  if (difficulty === 'hard') {
-    let bestMove = available[0];
-    let minDanger = Infinity;
-    for (const pos of available) {
-      const { newBoard } = drawLine(board, pos, 1);
-      let danger = 0;
-      for (let r = 0; r < board.rows; r++) {
-        for (let c = 0; c < board.cols; c++) {
-          if (!isCellActive(board, r, c)) continue;
-          if (newBoard.boxes[r][c] === null && getBoxSideCount(newBoard, r, c) === 3) danger++;
-        }
-      }
-      if (danger < minDanger) { minDanger = danger; bestMove = pos; }
-    }
-    return bestMove;
-  }
-
-  return available[Math.floor(Math.random() * available.length)];
+  return best[Math.floor(Math.random() * best.length)];
 }

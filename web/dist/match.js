@@ -1,4 +1,4 @@
-import {createDiamondBoard,drawLine,getAIMove,getAllAvailableLines,isGameOver} from './gameLogic.js';
+import {createDiamondBoard,drawLine,getAIMove,getAllAvailableLines,isGameOver} from './gameLogic.js?v=enclosures-7';
 
 // One owner for turn changes, computer scheduling, restart and undo.
 export class Match {
