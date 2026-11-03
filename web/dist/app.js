@@ -1,14 +1,17 @@
+import {levels,loadProgress,completeLevel,saveProgress} from './progression.js?v=levels-14';
 import {analytics} from './analytics.js';
-import {getAllAvailableLines,getScores,isGameOver,getWinner} from './gameLogic.js?v=random-start-13';
-import {Match} from './match.js?v=random-start-13';
+import {getAllAvailableLines,getScores,isGameOver,getWinner} from './gameLogic.js?v=levels-14';
+import {Match} from './match.js?v=levels-14';
 const $=id=>document.getElementById(id), NS='http://www.w3.org/2000/svg';
-let board,turn=0,config,gameAnalytics;
+let board,turn=0,config,gameAnalytics,progress=loadProgress(localStorage),levelRecorded=false;
+function levelOptions(){const select=$('difficulty'),value=select.value;select.replaceChildren();levels.forEach((level,i)=>{const option=document.createElement('option');option.value='level-'+i;option.textContent=`Level ${i+1} - ${level.name}${i<progress.completed?' - Complete':i>progress.completed?' - Locked':''}`;option.disabled=i>progress.completed;select.append(option);});for(const d of ['easy','medium','hard']){const option=document.createElement('option');option.value=d;option.textContent=`Practice - ${d}`;select.append(option);}select.value=value||'level-'+Math.min(progress.completed,levels.length-1);}
+levelOptions();$('difficulty').value='level-'+Math.min(progress.completed,levels.length-1);
 const match=new Match({onChange:state=>{board=state.board;turn=state.turn;config=state.config;render();gameAnalytics?.observe({hasMoves:state.moves.length>0,finished:isGameOver(state.board),mode:state.config.mode});}});
 const colors=['#b9ef81','#f5b398'];
 function svg(tag,attrs,parent=$('board')){const e=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);parent.append(e);return e;}
-function start(){gameAnalytics=analytics.newGame();match.start({size:'diamond',mode:$('mode').value,difficulty:$('difficulty').value,first:$('first').value==='random'?'random':Number($('first').value),names:[$('p1').value.trim()||'Player 1',$('mode').value==='ai'?'Computer':$('p2').value.trim()||'Player 2']});}
+function start(){levelRecorded=false;const selected=$('difficulty').value,index=selected.startsWith('level-')?Number(selected.slice(6)):null,level=index===null?null:levels[index];gameAnalytics=analytics.newGame();match.start({size:'diamond',mode:$('mode').value,difficulty:level?.difficulty||selected,mistakes:level?.mistakes||0,level:index,first:$('first').value==='random'?'random':Number($('first').value),names:[$('p1').value.trim()||'Player 1',$('mode').value==='ai'?'Computer':$('p2').value.trim()||'Player 2']});}
 function play(pos){match.play(pos);}
-function render(){const root=$('board');root.replaceChildren();const n=board.rows,step=400/n,off=50;const scores=getScores(board),total=board.shapeMask?25:n*n,done=isGameOver(board);$('starter').textContent=`${config.names[match.starter]} starts${config.first==='random'?' � randomly chosen':''}`;$('board-label').textContent=config.size==='diamond'?'DIAMOND BOARD':`${n} × ${n} BOARD`;
+function render(){const root=$('board');root.replaceChildren();const n=board.rows,step=400/n,off=50;const scores=getScores(board),total=board.shapeMask?25:n*n,done=isGameOver(board);$('starter').textContent=`${config.names[match.starter]} starts${config.first==='random'?' · randomly chosen':''}`;$('board-label').textContent=config.size==='diamond'?'DIAMOND BOARD':`${n} × ${n} BOARD`;
 for(let i=0;i<2;i++){$('name'+i).textContent=config.names[i];$('score'+i).textContent=scores[i];$('player'+i).classList.toggle('active',turn===i&&!done);$('player'+i).querySelector('.turn-marker').textContent=i===1&&config.mode==='ai'?'THINKING…':'YOUR TURN';}
 for(let r=0;r<n;r++)for(let c=0;c<n;c++){const owner=board.boxes[r][c];if(owner!==null){svg('rect',{x:off+c*step+6,y:off+r*step+6,width:step-12,height:step-12,rx:8,fill:colors[owner],opacity:'.16'});const text=svg('text',{x:off+(c+.5)*step,y:off+(r+.5)*step+5,'text-anchor':'middle',fill:colors[owner],'font-size':15,'font-family':'sans-serif'});text.textContent=owner===0?'01':'02';}}
 const available=new Set(getAllAvailableLines(board).map(p=>`${p.type}-${p.row}-${p.col}`)),dots=new Set();
@@ -20,11 +23,13 @@ $('computer-activity').hidden=config.mode!=='ai';
 $('computer-activity').textContent=lastComputer?`Computer played ${computerMoves.length} ${computerMoves.length===1?'line':'lines'}. Latest: ${lastComputer.type==='h'?'horizontal':'vertical'}, row ${lastComputer.row+1}, column ${lastComputer.col+1}${lastComputer.captured?` · captured ${lastComputer.captured} ${lastComputer.captured===1?'box':'boxes'}`:''}.`:'Computer will draw peach lines automatically on its turn.';
 for(const line of root.querySelectorAll('.played')){if(line.getAttribute('stroke')===colors[1])line.classList.add('computer-line');}
 if(last){const x=50+last.col*step,y=50+last.row*step;svg('circle',{cx:x+(last.type==='h'?step/2:0),cy:y+(last.type==='v'?step/2:0),r:5,fill:colors[last.player],class:'latest-move','pointer-events':'none'});}
-if(done){const winner=getWinner(board);$('status').textContent=winner==='tie'?`A perfect tie! ${scores[0]} – ${scores[1]}. Start fresh for a rematch.`:`${config.names[winner]} wins ${scores[winner]} – ${scores[1-winner]}! Ready for a rematch?`;}
+$('level-progress').hidden=config.mode!=='ai';$('level-progress').textContent=`Journey: ${progress.completed} / ${levels.length} levels completed${config.level===null?' - Practice match':` - Level ${config.level+1}`}`;$('next-level').hidden=true;
+if(done){const winner=getWinner(board);if(!levelRecorded&&config.mode==='ai'&&config.level!==null){progress=completeLevel(progress,config.level,winner);saveProgress(localStorage,progress);levelRecorded=true;levelOptions();}$('next-level').hidden=!(config.mode==='ai'&&config.level!==null&&winner===0&&config.level<levels.length-1);$('status').textContent=winner==='tie'?`A perfect tie! ${scores[0]} – ${scores[1]}. Start fresh for a rematch.`:`${config.names[winner]} wins ${scores[winner]} – ${scores[1-winner]}! Ready for a rematch?`;}
 else $('status').textContent=match.isComputerTurn()?'Computer is choosing a line…':last?.captured?`${config.names[last.player]} captured ${last.captured===1?'a box':last.captured+' boxes'} — ${config.names[turn]==='You'?'your':config.names[turn]+"'s"} turn.`:`${config.names[turn]==='You'?'Your':config.names[turn]+"'s"} move. Pick a line between two dots.`;
 }
 
-$('mode').addEventListener('change',()=>{const ai=$('mode').value==='ai';$('difficulty').disabled=!ai;$('p2').disabled=ai;$('p2').value=ai?'Computer':'Player 2';$('first').querySelector('[value="1"]').textContent=ai?'Computer starts':'Player 2 starts';start();});$('new').onclick=start;$('difficulty').addEventListener('change',()=>{config.difficulty=$('difficulty').value;});
+$('mode').addEventListener('change',()=>{const ai=$('mode').value==='ai';$('difficulty').disabled=!ai;$('p2').disabled=ai;$('p2').value=ai?'Computer':'Player 2';$('first').querySelector('[value="1"]').textContent=ai?'Computer starts':'Player 2 starts';start();});$('new').onclick=start;$('difficulty').addEventListener('change',start);
+$('next-level').onclick=()=>{$('difficulty').value='level-'+(config.level+1);start();};
 $('undo').onclick=()=>match.undo();
 $('first').addEventListener('change',start);
 $('help').onclick=()=>$('help-dialog').showModal();$('close-help').onclick=()=>$('help-dialog').close();start();

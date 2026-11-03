@@ -1,4 +1,4 @@
-import {createDiamondBoard,drawLine,getAIMove,getAllAvailableLines,isGameOver} from './gameLogic.js?v=random-start-13';
+import {createDiamondBoard,drawLine,getAIMove,getAllAvailableLines,isGameOver} from './gameLogic.js?v=levels-14';
 
 // One owner for turn changes, computer scheduling, restart and undo.
 export class Match {
@@ -32,7 +32,7 @@ export class Match {
       this.timer=null;
       const legal=getAllAvailableLines(this.board);
       let move;
-      try{move=getAIMove(this.board,this.config.difficulty);}catch{move=null;}
+      try{move=getAIMove(this.board,this.config.mistakes>0&&this.random()<this.config.mistakes?'easy':this.config.difficulty);}catch{move=null;}
       // A legal fallback keeps a failed strategy from stalling the match.
       if(!move||!legal.some(p=>p.type===move.type&&p.row===move.row&&p.col===move.col))move=legal[0];
       if(move)this.play(move,true);
