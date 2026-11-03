@@ -137,13 +137,15 @@ export function drawLine(
 
   // The new wall can split the connected playing field into a sealed pocket
   // and its larger remainder. All drawn walls count, including the neutral
-  // starting border. Equal pockets are both captured (as with two unit boxes).
+  // starting border. Tied multi-box pockets award one side only; the side
+  // above a horizontal line or left of a vertical line wins the tie. Two
+  // completed individual boxes are the only equal-size double capture.
   const [first, second] = getAdjacentBoxes(board, pos);
   if (first && second) {
     const a = connectedRegion(newBoard, ...first);
     if (!a.some(([r, c]) => r === second[0] && c === second[1])) {
       const b = connectedRegion(newBoard, ...second);
-      const captured = a.length < b.length ? a : b.length < a.length ? b : [...a, ...b];
+      const captured = a.length === 1 && b.length === 1 ? [...a, ...b] : a.length <= b.length ? a : b;
       for (const [r, c] of captured) {
         if (newBoard.boxes[r][c] === null) {
           newBoard.boxes[r][c] = playerIdx;
