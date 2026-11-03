@@ -1,14 +1,14 @@
 import {analytics} from './analytics.js';
-import {getAllAvailableLines,getScores,isGameOver,getWinner} from './gameLogic.js?v=unclaimed-moves-12';
-import {Match} from './match.js?v=unclaimed-moves-12';
+import {getAllAvailableLines,getScores,isGameOver,getWinner} from './gameLogic.js?v=random-start-13';
+import {Match} from './match.js?v=random-start-13';
 const $=id=>document.getElementById(id), NS='http://www.w3.org/2000/svg';
 let board,turn=0,config,gameAnalytics;
 const match=new Match({onChange:state=>{board=state.board;turn=state.turn;config=state.config;render();gameAnalytics?.observe({hasMoves:state.moves.length>0,finished:isGameOver(state.board),mode:state.config.mode});}});
 const colors=['#b9ef81','#f5b398'];
 function svg(tag,attrs,parent=$('board')){const e=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);parent.append(e);return e;}
-function start(){gameAnalytics=analytics.newGame();match.start({size:'diamond',mode:$('mode').value,difficulty:$('difficulty').value,first:Number($('first').value),names:[$('p1').value.trim()||'Player 1',$('mode').value==='ai'?'Computer':$('p2').value.trim()||'Player 2']});}
+function start(){gameAnalytics=analytics.newGame();match.start({size:'diamond',mode:$('mode').value,difficulty:$('difficulty').value,first:$('first').value==='random'?'random':Number($('first').value),names:[$('p1').value.trim()||'Player 1',$('mode').value==='ai'?'Computer':$('p2').value.trim()||'Player 2']});}
 function play(pos){match.play(pos);}
-function render(){const root=$('board');root.replaceChildren();const n=board.rows,step=400/n,off=50;const scores=getScores(board),total=board.shapeMask?25:n*n,done=isGameOver(board);$('board-label').textContent=config.size==='diamond'?'DIAMOND BOARD':`${n} × ${n} BOARD`;
+function render(){const root=$('board');root.replaceChildren();const n=board.rows,step=400/n,off=50;const scores=getScores(board),total=board.shapeMask?25:n*n,done=isGameOver(board);$('starter').textContent=`${config.names[match.starter]} starts${config.first==='random'?' � randomly chosen':''}`;$('board-label').textContent=config.size==='diamond'?'DIAMOND BOARD':`${n} × ${n} BOARD`;
 for(let i=0;i<2;i++){$('name'+i).textContent=config.names[i];$('score'+i).textContent=scores[i];$('player'+i).classList.toggle('active',turn===i&&!done);$('player'+i).querySelector('.turn-marker').textContent=i===1&&config.mode==='ai'?'THINKING…':'YOUR TURN';}
 for(let r=0;r<n;r++)for(let c=0;c<n;c++){const owner=board.boxes[r][c];if(owner!==null){svg('rect',{x:off+c*step+6,y:off+r*step+6,width:step-12,height:step-12,rx:8,fill:colors[owner],opacity:'.16'});const text=svg('text',{x:off+(c+.5)*step,y:off+(r+.5)*step+5,'text-anchor':'middle',fill:colors[owner],'font-size':15,'font-family':'sans-serif'});text.textContent=owner===0?'01':'02';}}
 const available=new Set(getAllAvailableLines(board).map(p=>`${p.type}-${p.row}-${p.col}`)),dots=new Set();
@@ -24,7 +24,7 @@ if(done){const winner=getWinner(board);$('status').textContent=winner==='tie'?`A
 else $('status').textContent=match.isComputerTurn()?'Computer is choosing a line…':last?.captured?`${config.names[last.player]} captured ${last.captured===1?'a box':last.captured+' boxes'} — ${config.names[turn]==='You'?'your':config.names[turn]+"'s"} turn.`:`${config.names[turn]==='You'?'Your':config.names[turn]+"'s"} move. Pick a line between two dots.`;
 }
 
-$('mode').addEventListener('change',()=>{const ai=$('mode').value==='ai';$('difficulty').disabled=!ai;$('p2').disabled=ai;$('p2').value=ai?'Computer':'Player 2';$('first').options[1].textContent=ai?'Computer starts':'Player 2 starts';start();});$('new').onclick=start;$('difficulty').addEventListener('change',()=>{config.difficulty=$('difficulty').value;});
+$('mode').addEventListener('change',()=>{const ai=$('mode').value==='ai';$('difficulty').disabled=!ai;$('p2').disabled=ai;$('p2').value=ai?'Computer':'Player 2';$('first').querySelector('[value="1"]').textContent=ai?'Computer starts':'Player 2 starts';start();});$('new').onclick=start;$('difficulty').addEventListener('change',()=>{config.difficulty=$('difficulty').value;});
 $('undo').onclick=()=>match.undo();
 $('first').addEventListener('change',start);
 $('help').onclick=()=>$('help-dialog').showModal();$('close-help').onclick=()=>$('help-dialog').close();start();

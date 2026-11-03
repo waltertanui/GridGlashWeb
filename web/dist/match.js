@@ -1,16 +1,16 @@
-import {createDiamondBoard,drawLine,getAIMove,getAllAvailableLines,isGameOver} from './gameLogic.js?v=unclaimed-moves-12';
+import {createDiamondBoard,drawLine,getAIMove,getAllAvailableLines,isGameOver} from './gameLogic.js?v=random-start-13';
 
 // One owner for turn changes, computer scheduling, restart and undo.
 export class Match {
-  constructor({onChange=()=>{},delay=650,setTimer=(fn,ms)=>setTimeout(fn,ms),clearTimer=id=>clearTimeout(id)}={}) {
-    Object.assign(this,{onChange,delay,setTimer,clearTimer});
+  constructor({onChange=()=>{},random=Math.random,delay=650,setTimer=(fn,ms)=>setTimeout(fn,ms),clearTimer=id=>clearTimeout(id)}={}) {
+    Object.assign(this,{onChange,random,delay,setTimer,clearTimer});
     this.generation=0;
     this.timer=null;
   }
   cancel(){this.generation++;if(this.timer!==null)this.clearTimer(this.timer);this.timer=null;}
   start(config){
     this.cancel();this.config={...config};this.board=createDiamondBoard();
-    this.turn=config.first===1?1:0;this.history=[];this.moves=[];
+    this.turn=config.first==='random'? (this.random()<0.5?0:1) : config.first===1?1:0;this.starter=this.turn;this.history=[];this.moves=[];
     this.schedule();this.onChange(this);
   }
   isComputerTurn(){return this.config.mode==='ai'&&this.turn===1&&!isGameOver(this.board);}
