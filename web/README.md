@@ -15,3 +15,7 @@ See [VERCEL.md](VERCEL.md) for deployment and the three required server environm
 ## Enclosure capture rule
 
 Completed individual boxes score normally (including two completed unit boxes sharing one last line). Otherwise, if a line separates two closed multi-box areas, only the side with more unclaimed boxes is awarded: 3 vs 4 gives 4; 2 vs 3 gives 3. Count only unclaimed cells, not total geometric area. Previously claimed cells retain their owners. Equal point totals choose the side above a horizontal closing line or left of a vertical line. Both sides are never combined for a multi-box capture. The pre-drawn border counts. Turns still alternate. This highest-score policy replaces the previous smaller-pocket rule. The computer uses the same scoring function.
+
+### Valid pockets versus the remaining field
+
+Capture eligibility is checked before comparing scores. A closed played-line loop can capture its interior, including partial internal dividers. For border-assisted pockets, a region still spanning multiple untouched tips or containing unfinished internal divider branches is the remaining playing field, not a capture candidate. A region surrounding a different unclaimed pocket is also excluded. Only eligible pockets compete by number of new points. Regression tests cover a two-box closure beside an eighteen-box open field, both higher-side examples, and single-corner safety.

@@ -145,8 +145,9 @@ export function drawLine(
     if (!a.some(([r, c]) => r === second[0] && c === second[1])) {
       const b = connectedRegion(newBoard, ...second);
       const unclaimed = region => region.filter(([r, c]) => board.boxes[r][c] === null);
-      const aPoints = surroundsOtherCells(newBoard, a) ? [] : unclaimed(a);
-      const bPoints = surroundsOtherCells(newBoard, b) ? [] : unclaimed(b);
+      const explicitInterior = playedLoopInterior(newBoard);
+      const aPoints = isCapturePocket(board, newBoard, a, explicitInterior) ? unclaimed(a) : [];
+      const bPoints = isCapturePocket(board, newBoard, b, explicitInterior) ? unclaimed(b) : [];
       const captured = aPoints.length >= bPoints.length ? aPoints : bPoints;
       for (const [r, c] of captured) {
         newBoard.boxes[r][c] = playerIdx;
@@ -176,6 +177,44 @@ function connectedRegion(board, row, col) {
     }
   }
   return queue;
+}
+
+// A completed played loop is an explicit capture boundary, even when it
+// contains partial internal dividers. Starting neutral borders are transparent
+// for this check so they cannot make the whole board a capture at game start.
+function playedLoopInterior(board) {
+  const outside = new Set(['-1,-1']), queue = [[-1,-1]];
+  for (let i=0;i<queue.length;i++) {
+    const [r,c]=queue[i];
+    for(const [nr,nc,owner] of [[r-1,c,board.hLineOwner[r]?.[c]],[r+1,c,board.hLineOwner[r+1]?.[c]],[r,c-1,board.vLineOwner[r]?.[c]],[r,c+1,board.vLineOwner[r]?.[c+1]]]) {
+      const key=nr+','+nc;
+      if(nr < -1 || nc < -1 || nr > board.rows || nc > board.cols || owner != null || outside.has(key))continue;
+      outside.add(key);queue.push([nr,nc]);
+    }
+  }
+  const interior=new Set();
+  for(let r=0;r<board.rows;r++)for(let c=0;c<board.cols;c++)if(isCellActive(board,r,c)&&!outside.has(r+','+c))interior.add(r+','+c);
+  return interior;
+}
+
+function isCapturePocket(before, after, region, explicitInterior) {
+  const points=region.filter(([r,c])=>before.boxes[r][c]===null);
+  if(!points.length || surroundsOtherCells(after,region))return false;
+  if(points.every(([r,c])=>explicitInterior.has(r+','+c)))return true;
+  const cells=new Set(region.map(([r,c])=>r+','+c));
+  let openTips=0;
+  for(const [r,c] of points) {
+    // Multiple untouched tips identify the main playing field, not a pocket.
+    const borderSides=Number(!isCellActive(after,r-1,c))+Number(!isCellActive(after,r+1,c))+Number(!isCellActive(after,r,c-1))+Number(!isCellActive(after,r,c+1));
+    if(borderSides>=3 && ++openTips>1)return false;
+  }
+  // An unfinished divider inside a region is an open branch of the playing
+  // field. Completing a pocket elsewhere must not sweep up that field.
+  for(const [r,c] of region) {
+    if(cells.has((r+1)+','+c)&&after.hLines[r+1][c])return false;
+    if(cells.has(r+','+(c+1))&&after.vLines[r][c+1])return false;
+  }
+  return true;
 }
 
 // The outside remainder around an internal loop is not its captured interior.

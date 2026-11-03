@@ -32,10 +32,10 @@ test('An open loop and the neutral starting border do not award the whole board'
   const fresh=drawLine(createDiamondBoard(),{type:'h',row:3,col:3},0);
   assert.equal(fresh.claimedBoxes,0);
 });
-test('The higher-scoring side wins while an opponent-owned box stays unchanged',()=>{
+test('Closed six-cell loop awards five new points and leaves the main field unclaimed',()=>{
   const {board,missing}=prepare(rectangle(2,2,3,2));board.boxes[3][3]=1;
   const result=drawLine(board,missing,0);
-  assert.equal(result.claimedBoxes,15);assert.deepEqual(getScores(result.newBoard),[15,1]);
+  assert.equal(result.claimedBoxes,5);assert.deepEqual(getScores(result.newBoard),[5,1]);
   assert.equal(result.newBoard.boxes[3][3],1);
 });
 test('The fourth side of a single box is counted once, including inside a loop',()=>{
