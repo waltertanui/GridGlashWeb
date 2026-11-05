@@ -4,6 +4,7 @@ import path from 'node:path';
 import {existsSync} from 'node:fs';
 import events from './api/events.js';
 import stats from './api/stats.js';
+import room from './api/room.js';
 const envFile=path.resolve(import.meta.dirname,'.env.local');
 if(existsSync(envFile))process.loadEnvFile(envFile);
 const root=path.resolve(import.meta.dirname,'dist');
@@ -12,6 +13,7 @@ http.createServer(async(req,res)=>{
     const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
     if(pathname==='/api/events')return await events(req,res);
     if(pathname==='/api/stats')return await stats(req,res);
+    if(pathname==='/api/room')return await room(req,res);
     if(req.method!=='GET'&&req.method!=='HEAD'){res.writeHead(405).end();return;}
     const page=pathname==='/'?'/index.html':pathname==='/admin'?'/admin.html':pathname==='/privacy'?'/privacy.html':pathname;
     const file=path.resolve(root,'.'+page);

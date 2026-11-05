@@ -19,3 +19,12 @@ Completed individual boxes score normally (including two completed unit boxes sh
 ### Valid pockets versus the remaining field
 
 Capture eligibility is checked before comparing scores. A closed played-line loop can capture its interior, including partial internal dividers. For border-assisted pockets, a region still spanning multiple untouched tips or containing unfinished internal divider branches is the remaining playing field, not a capture candidate. A region surrounding a different unclaimed pocket is also excluded. Only eligible pockets compete by number of new points. Regression tests cover a two-box closure beside an eighteen-box open field, both higher-side examples, and single-corner safety.
+
+
+## Online multiplayer
+
+Choose **Online · play a friend**, enter your player name, and create a room. Send the invite link to your friend; they enter a name and press Join room. The room uses a random starter and the same capture and alternating-turn rules as local play. Both players must request a rematch to reset the board. Online play has no undo.
+
+The existing `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are also used for rooms on Vercel; no extra service is required. Room credentials are private to each browser tab and survive refreshes in session storage. Invite links only include the room code. A room allows two seats, and expires 24 hours after the last join, move or rematch. Closing the tab may lose that player's seat credential. The browser polls every three seconds; temporary network errors retry automatically.
+
+The server validates all moves, turns and ownership. Atomic Redis version comparisons prevent simultaneous updates from overwriting each other. Without Redis, the local development server uses memory (rooms disappear on server restart); production requires Redis. Anonymous analytics classify each player's online game as a two-player game.
