@@ -23,7 +23,7 @@ Capture eligibility is checked before comparing scores. A closed played-line loo
 
 ## Online multiplayer
 
-Choose **Online · play a friend**, enter your player name, and create a room. Send the invite link to your friend; they enter a name and press Join room. The room uses a random starter and the same capture and alternating-turn rules as local play. Both players must request a rematch to reset the board. Online play has no undo.
+Choose **Online · play a friend**, create a room, and send the invite link to your friend. Opening the link automatically joins them as Guest and starts the match. Players can also enter a room code to join manually. The room uses a random starter and the same capture and alternating-turn rules as local play. Both players must request a rematch to reset the board. Online play has no undo.
 
 The existing `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are also used for rooms on Vercel; no extra service is required. Room credentials are private to each browser tab and survive refreshes in session storage. Invite links only include the room code. A room allows two seats, and expires 24 hours after the last join, move or rematch. Closing the tab may lose that player's seat credential. The browser polls every three seconds; temporary network errors retry automatically.
 

@@ -37,7 +37,10 @@ function changeMode(){const mode=$('mode').value,ai=mode==='ai',isOnline=mode===
 $('mode').addEventListener('change',changeMode);$('new').onclick=()=>{if(config.mode==='online')online.rematch();else start();};$('difficulty').addEventListener('change',start);
 async function connectRoom(action){
  const room=$('room-code').value.trim().toLowerCase();$('room-message').textContent='Connecting…';$('create-room').disabled=true;$('join-room').disabled=true;localMatch.cancel();match=online;
- try{await online.connect(action,{room,name:$('p1').value.trim()||'Player'});if(online.state){history.replaceState(null,'','#room='+online.state.id);gameAnalytics=analytics.newGame();}}
+ const enteredName=$('p1').value.trim();
+ const name=action==='join'&&(!enteredName||enteredName==='You')?'Guest':enteredName||'Player';
+ gameAnalytics=analytics.newGame();
+ try{await online.connect(action,{room,name});if($('mode').value==='online'&&online.state){history.replaceState(null,'','#room='+online.state.id);}}
  catch{match=localMatch;}
  finally{$('create-room').disabled=!!online.state;$('join-room').disabled=!!online.state;}
 }
@@ -49,5 +52,11 @@ $('undo').onclick=()=>match.undo();
 $('first').addEventListener('change',start);
 $('help').onclick=()=>$('help-dialog').showModal();$('close-help').onclick=()=>$('help-dialog').close();start();
 
-const invite=/^#room=([a-f0-9]{16})$/.exec(location.hash);if(invite){$('mode').value='online';changeMode();$('room-code').value=invite[1];if(online.credential(invite[1]))connectRoom('join');}
+const invite=/^#room=([a-f0-9]{16})$/i.exec(location.hash);
+if(invite){
+ $('mode').value='online';
+ changeMode();
+ $('room-code').value=invite[1].toLowerCase();
+ connectRoom('join');
+}
 analytics.visit();
